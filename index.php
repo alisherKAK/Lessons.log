@@ -4,5 +4,3 @@ use Tag\Form;
 use Tag\NamedTag;
 
 include_once "autoload.php";
-
-$room = new Form();
