@@ -65,6 +65,54 @@ function db_dataBuilder(array $data, $connection) {
     ];
 }
 
+function db_columnsQueryBuilder(array $columns) {
+   $result = "\n";
+   foreach ($columns as $key => $constraints)
+   {
+       $result .= $key . ' ';
+       if(!is_array($constraints))
+           $result .= $constraints;
+       else
+           foreach ($constraints as $constraint)
+               $result .= $constraint . ' ';
+
+       $result .= ",\n";
+   }
+
+   return trim($result, ",\t\n\r\0\x0B");
+}
+
+function db_alterQueryBuilder(array $args) {
+    $result = '';
+    foreach ($args as $alter => $columns) {
+        foreach ($columns as $key => $constraints)
+        {
+            switch (strtolower($alter)) {
+                case "add":
+                    $result .= "ADD COLUMN ";
+                    break;
+                case "drop":
+                    $result .= "DROP COLUMN ";
+                    break;
+                case "modify":
+                    $result .= "MODIFY COLUMN ";
+                    break;
+            }
+            $result .= "{$key} ";
+
+            if(!is_array($constraints))
+                $constraints = [$constraints];
+
+            foreach ($constraints as $constraint)
+                $result .= "{$constraint} ";
+
+            $result .= ",\n";
+        }
+    }
+
+    return trim($result, ",\t\n\r\0\x0B");
+}
+
 function db_select($table, $cols = "*", array $where = []) {
     // Если $cols массив, то делаемм строкой через запятую
     if (is_array($cols))
@@ -148,4 +196,47 @@ function db_delete($table, array $where) {
     mysqli_close($connection);
     return $result;
 
+}
+
+function db_create(string $table, array $columns) {
+    $tableName = db_getTable($table);
+    $connection = db_getConnectionFromTable($table);
+    $columnsQuery = db_columnsQueryBuilder($columns);
+
+    $query = "CREATE TABLE {$tableName} ({$columnsQuery})";
+    $result = mysqli_query($connection, $query);
+
+    if($result == false)
+        db_checkOrDie($connection);
+
+    mysqli_close($connection);
+    return $result;
+}
+
+function db_drop(string $table) {
+    $connection = db_getConnectionFromTable($table);
+    $table = db_getTable($table);
+
+    $query = "DROP TABLE {$table}";
+    $result = mysqli_query($connection, $query);
+
+    if($result == false)
+        db_checkOrDie($connection);
+
+    mysqli_close($connection);
+    return $result;
+}
+
+function db_alter(string $table, array $args) {
+    $connection = db_getConnectionFromTable($table);
+    $table = db_getTable($table);
+
+    $query = "ALTER TABLE {$table} " . db_alterQueryBuilder($args);
+    $result = mysqli_query($connection, $query);
+
+    if($result == false)
+        db_checkOrDie($connection);
+
+    mysqli_close($connection);
+    return $result;
 }
