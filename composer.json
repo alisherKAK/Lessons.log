@@ -1,0 +1,11 @@
+{
+    "name": "tag/tag_helper",
+    "description": "Classes which helps you to create tags dynamically",
+    "license": "MIT",
+    "require": {},
+	"autoload": {
+		"psr-4": {
+			"Tag\\": "./classes/Tag"
+		}
+	}
+}
